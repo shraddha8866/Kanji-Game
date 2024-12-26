@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kanji Quiz Game</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+      background-color: #f4f4f9;
+    }
+    #kanji {
+      font-size: 5em;
+      margin: 20px 0;
+    }
+    #options button {
+      padding: 10px 20px;
+      margin: 10px;
+      font-size: 1em;
+      border: none;
+      border-radius: 5px;
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+    }
+    #options button:hover {
+      background-color: #0056b3;
+    }
+    #score, #game-over {
+      margin: 20px 0;
+      font-size: 1.2em;
+    }
+    #restart {
+      padding: 10px 20px;
+      font-size: 1em;
+      border: none;
+      border-radius: 5px;
+      background-color: #28a745;
+      color: white;
+      display: none;
+      cursor: pointer;
+    }
+    #restart:hover {
+      background-color: #218838;
+    }
+  </style>
+</head>
+<body>
+  <h1>Kanji Quiz Game</h1>
+  <div id="kanji"></div>
+  <div id="options"></div>
+  <div id="score"></div>
+  <div id="game-over"></div>
+  <button id="restart" onclick="restartGame()">Restart Game</button>
+  <script>
+    // JLPT N5 Kanji List (80+ Kanji)
+const kanjiList = [
+  { kanji: "日", meaning: "Sun", options: ["Sun", "Moon", "Fire", "Water"] },
+  { kanji: "月", meaning: "Moon", options: ["Tree", "Moon", "Earth", "Rice Field"] },
+  { kanji: "火", meaning: "Fire", options: ["Gold", "Fire", "Rain", "Mountain"] },
+  { kanji: "水", meaning: "Water", options: ["Water", "Tree", "Stone", "Sword"] },
+  { kanji: "木", meaning: "Tree", options: ["Flower", "Tree", "Fish", "Sky"] },
+  { kanji: "山", meaning: "Mountain", options: ["Mountain", "River", "Wind", "Sun"] },
+  { kanji: "川", meaning: "River", options: ["River", "Cloud", "Leaf", "Rock"] },
+  { kanji: "金", meaning: "Gold", options: ["Gold", "Iron", "Copper", "Lead"] },
+  { kanji: "土", meaning: "Earth", options: ["Earth", "Grass", "Rain", "Lightning"] },
+  { kanji: "田", meaning: "Rice Field", options: ["Ocean", "Rice Field", "Snow", "Lake"] },
+  { kanji: "人", meaning: "Person", options: ["Person", "Child", "Man", "Woman"] },
+  { kanji: "口", meaning: "Mouth", options: ["Mouth", "Ear", "Nose", "Hand"] },
+  { kanji: "目", meaning: "Eye", options: ["Eye", "Ear", "Nose", "Heart"] },
+  { kanji: "耳", meaning: "Ear", options: ["Ear", "Eye", "Nose", "Heart"] },
+  { kanji: "手", meaning: "Hand", options: ["Hand", "Foot", "Finger", "Head"] },
+  { kanji: "足", meaning: "Foot", options: ["Foot", "Hand", "Leg", "Head"] },
+  { kanji: "車", meaning: "Car", options: ["Car", "Train", "Bus", "Plane"] },
+  { kanji: "魚", meaning: "Fish", options: ["Fish", "Bird", "Dog", "Cat"] },
+  { kanji: "鳥", meaning: "Bird", options: ["Bird", "Fish", "Dog", "Cat"] },
+  { kanji: "犬", meaning: "Dog", options: ["Dog", "Cat", "Bird", "Fish"] },
+  { kanji: "猫", meaning: "Cat", options: ["Cat", "Dog", "Bird", "Fish"] },
+  { kanji: "白", meaning: "White", options: ["White", "Black", "Red", "Blue"] },
+  { kanji: "黒", meaning: "Black", options: ["Black", "White", "Yellow", "Green"] },
+  { kanji: "赤", meaning: "Red", options: ["Red", "Blue", "Green", "Yellow"] },
+  { kanji: "青", meaning: "Blue", options: ["Blue", "Red", "Yellow", "Green"] },
+  { kanji: "緑", meaning: "Green", options: ["Green", "Red", "Blue", "Yellow"] },
+  { kanji: "黄", meaning: "Yellow", options: ["Yellow", "Blue", "Red", "Green"] },
+  { kanji: "空", meaning: "Sky", options: ["Sky", "Sea", "Mountain", "River"] },
+  { kanji: "海", meaning: "Sea", options: ["Sea", "River", "Lake", "Mountain"] },
+  { kanji: "花", meaning: "Flower", options: ["Flower", "Tree", "Leaf", "Seed"] },
+  { kanji: "草", meaning: "Grass", options: ["Grass", "Tree", "Leaf", "Flower"] },
+  { kanji: "石", meaning: "Stone", options: ["Stone", "Rock", "Mountain", "River"] },
+  { kanji: "雨", meaning: "Rain", options: ["Rain", "Snow", "Wind", "Cloud"] },
+  { kanji: "雪", meaning: "Snow", options: ["Snow", "Rain", "Ice", "Wind"] },
+  { kanji: "風", meaning: "Wind", options: ["Wind", "Cloud", "Rain", "Snow"] },
+  { kanji: "雲", meaning: "Cloud", options: ["Cloud", "Rain", "Snow", "Wind"] },
+  { kanji: "本", meaning: "Book", options: ["Book", "Pen", "Pencil", "Paper"] },
+  { kanji: "学", meaning: "Study", options: ["Study", "Work", "Play", "Sleep"] },
+  { kanji: "校", meaning: "School", options: ["School", "College", "Library", "Office"] },
+  { kanji: "友", meaning: "Friend", options: ["Friend", "Enemy", "Stranger", "Neighbor"] },
+  { kanji: "時", meaning: "Time", options: ["Time", "Day", "Night", "Hour"] },
+  { kanji: "名", meaning: "Name", options: ["Name", "Face", "Voice", "Sound"] },
+  { kanji: "気", meaning: "Spirit", options: ["Spirit", "Heart", "Mind", "Soul"] },
+  { kanji: "心", meaning: "Heart", options: ["Heart", "Mind", "Soul", "Body"] },
+  { kanji: "体", meaning: "Body", options: ["Body", "Heart", "Head", "Foot"] },
+  { kanji: "力", meaning: "Power", options: ["Power", "Strength", "Energy", "Force"] },
+  { kanji: "円", meaning: "Yen", options: ["Yen", "Dollar", "Euro", "Pound"] },
+  { kanji: "天", meaning: "Heaven", options: ["Heaven", "Earth", "Sky", "Cloud"] },
+  { kanji: "大", meaning: "Big", options: ["Big", "Small", "Tall", "Short"] },
+  { kanji: "小", meaning: "Small", options: ["Small", "Big", "Short", "Tall"] },
+  { kanji: "書", meaning: "Write", options: ["Write", "Read", "Speak", "Listen"] },
+  { kanji: "読", meaning: "Read", options: ["Read", "Write", "Speak", "Listen"] },
+  { kanji: "食", meaning: "Eat", options: ["Eat", "Sleep", "Drink", "Play"] },
+  { kanji: "飲", meaning: "Drink", options: ["Drink", "Eat", "Sleep", "Talk"] },
+  { kanji: "走", meaning: "Run", options: ["Run", "Walk", "Fly", "Jump"] },
+  { kanji: "寝", meaning: "Sleep", options: ["Sleep", "Eat", "Talk", "Run"] },
+  { kanji: "起", meaning: "Wake Up", options: ["Wake Up", "Sleep", "Eat", "Walk"] },
+  { kanji: "買", meaning: "Buy", options: ["Buy", "Sell", "Pay", "Give"] },
+  { kanji: "売", meaning: "Sell", options: ["Sell", "Buy", "Pay", "Give"] },
+  { kanji: "切", meaning: "Cut", options: ["Cut", "Stick", "Hold", "Drop"] },
+  { kanji: "開", meaning: "Open", options: ["Open", "Close", "Jump", "Run"] },
+  { kanji: "閉", meaning: "Close", options: ["Close", "Open", "Run", "Talk"] },
+  { kanji: "待", meaning: "Wait", options: ["Wait", "Go", "Come", "Leave"] },
+  { kanji: "遊", meaning: "Play", options: ["Play", "Sleep", "Eat", "Run"] },
+];
+
+// Shuffle the Kanji list
+function shuffleKanji() {
+  for (let i = kanjiList.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [kanjiList[i], kanjiList[j]] = [kanjiList[j], kanjiList[i]]; // Swap
+  }
+}
+
+// Initialize variables
+let score = 0;
+let currentIndex = 0;
+let selectedAnswer = "";
+
+// Load the current Kanji question
+function loadKanji() {
+  const kanjiElement = document.getElementById("kanji");
+  const optionsElement = document.getElementById("options");
+  const scoreElement = document.getElementById("score");
+  const gameOverElement = document.getElementById("game-over");
+  const restartButton = document.getElementById("restart");
+
+  // Clear previous answer
+  selectedAnswer = "";
+
+  // Clear game-over message and hide restart button
+  gameOverElement.innerHTML = "";
+  restartButton.style.display = "none";
+
+  // Display the current Kanji and options
+  kanjiElement.innerText = kanjiList[currentIndex].kanji;
+  optionsElement.innerHTML = "";
+  kanjiList[currentIndex].options.forEach((option) => {
+    const button = document.createElement("button");
+    button.innerText = option;
+    button.onclick = () => checkAnswer(option);
+    optionsElement.appendChild(button);
+  });
+
+  // Update the score
+  scoreElement.innerText = `Score: ${score}`;
+}
+
+// Check the selected answer
+function checkAnswer(selectedOption) {
+  const gameOverElement = document.getElementById("game-over");
+  const restartButton = document.getElementById("restart");
+  
+  // If correct answer
+  if (selectedOption === kanjiList[currentIndex].meaning) {
+    score++;
+    currentIndex++;
+    
+    // Load next Kanji or finish the game
+    if (currentIndex < kanjiList.length) {
+      loadKanji();
+    } else {
+      gameOverElement.innerHTML = "Congratulations! You've completed all Kanji!";
+      restartButton.style.display = "block";
+    }
+  } else {
+    // Incorrect answer: Reveal correct answer
+    gameOverElement.innerHTML = `Game Over! Your final score is ${score}.<br>The correct answer is: ${kanjiList[currentIndex].meaning}.`;
+    restartButton.style.display = "block";
+  }
+}
+
+// Restart the game
+function restartGame() {
+  score = 0;
+  currentIndex = 0;
+  shuffleKanji(); // Shuffle the Kanji list on restart
+  loadKanji();
+}
+
+// Initialize the game on page load
+document.addEventListener("DOMContentLoaded", function() {
+  shuffleKanji(); // Shuffle before starting the game
+  loadKanji();
+});
+
+  </script>
+</body>
+</html>
